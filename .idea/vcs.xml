@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="IssueNavigationConfiguration">
+    <option name="links">
+      <list>
+        <IssueNavigationLink>
+          <option name="issueRegexp" value="\(#(\d+)\)" />
+          <option name="linkRegexp" value="https://github.com/BITS-Rohit/tweakio-whatsapp/issues/$1" />
+        </IssueNavigationLink>
+        <IssueNavigationLink>
+          <option name="issueRegexp" value="#(\d+)" />
+          <option name="linkRegexp" value="https://github.com/BITS-Rohit/tweakio-whatsapp/issues/$1" />
+        </IssueNavigationLink>
+        <IssueNavigationLink>
+          <option name="issueRegexp" value="GH-(\d+)" />
+          <option name="linkRegexp" value="https://github.com/BITS-Rohit/tweakio-whatsapp/issues/$1" />
+        </IssueNavigationLink>
+        <IssueNavigationLink>
+          <option name="issueRegexp" value="([^/\n\s]+/[^#\n\s]+)#(\d+)" />
+          <option name="linkRegexp" value="https://github.com/$1/issues/$2" />
+        </IssueNavigationLink>
+      </list>
+    </option>
+  </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
   </component>
