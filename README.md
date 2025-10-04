@@ -63,4 +63,5 @@ Contributors are welcome! Feel free to:
 
 ## License
 
-This project is open-source. (MIT, Apache, etc.).
+This project is licensed under the [MIT License](LICENSE).
+
