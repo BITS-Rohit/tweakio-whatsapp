@@ -84,10 +84,10 @@ async def _reply_(page: Page, message: Union[ElementHandle, Locator], text: str,
         await ha.human_send(page, element=await inBox.element_handle(timeout=1000), text=text)
         return True
 
-    except Exception as e:
+    except Exception:
         if retry < 1:
             return await _reply_(page, message, text, retry + 1)
-        logger.error(f"[_reply_] Failed after retry: {e}")
+        logger.error(f"[_reply_] Failed after retry", exc_info=True)
         return False
 
 
@@ -107,7 +107,7 @@ async def reply(
     if success:
         await page.keyboard.press("Enter")
     else:
-        logger.error("[reply] Failed to reply, Enter not pressed.")
+        logger.error("[reply] Failed to reply, Enter not pressed.", exc_info=True)
 
 
 async def reply_media(
@@ -145,4 +145,4 @@ async def reply_media(
     else:
         await page.keyboard.press("Escape", delay=random.randint(701, 893))
         await page.keyboard.press("Escape", delay=random.randint(701, 893))
-        logger.warning("[reply_media] Failed to reply with media, Escaped out.")
+        logger.warning("[reply_media] Failed to reply with media, Escaped out.", exc_info=True)

@@ -1,8 +1,11 @@
+"""
+Util Doc for tweakio-whatsapp library
+Todo Convert to a Fully Utils class ---------------------------------------------------------
+"""
 import asyncio
 import pathlib as pa
 import random
 import shutil
-import time
 from typing import Union, Optional
 
 from playwright.async_api import Page, ElementHandle, Locator
@@ -14,7 +17,7 @@ from Shared_Resources import logger
 # ----------------------
 # Message to any Chat
 # ----------------------
-async def MessageToChat(page: Page, text: str) -> bool:
+async def MessageToChat(page: Page, text: str) -> None:
     """
     Send message to any chat
     Steps:
@@ -62,7 +65,7 @@ async def MessageToChat(page: Page, text: str) -> bool:
 
         logger.info("Messaged: Logged in, Success. Tweakio: Hi ! ✅ Messaging Done.")
     except Exception as e:
-        logger.error(f"Failed to Message to Chat with error {e}")
+        logger.error(f"Failed to Message to Chat with error {e}", exc_info=True)
 
 
 # ----------------------
@@ -129,7 +132,7 @@ async def getSenderID(message: Union[ElementHandle, Locator]) -> str:
             parts = attr.split("]", 1)
             return parts[1].strip()[:-1] if len(parts) > 1 else ""
         except Exception as e:
-            logger.error(f"Error extracting sender: {e}")
+            logger.error(f"Error extracting sender {e}", exc_info=True)
             return ""
 
     if "@lid" in raw:
@@ -169,7 +172,7 @@ async def getGID_CID(message: Union[ElementHandle, Locator]) -> str:
         else:
             return ""
     except Exception as e:
-        logger.error(f"Error in getGID_CID: {e}")
+        logger.error(f"Error in getGID_CID {e}", exc_info=True)
         return ""
 
 
@@ -205,7 +208,7 @@ async def GetMessType(message: Union[ElementHandle, Locator]) -> str:
         return "text"
 
     except Exception as e:
-        logger.error(f"Unexpected error in GetMessType: {e}")
+        logger.error(f"Unexpected error in GetMessType {e}", exc_info=True)
         return "unknown"
 
 
@@ -227,7 +230,7 @@ async def get_Timestamp(message: Union[ElementHandle, Locator]) -> str:
                 return data.split("]")[0].strip("[")
         return ""
     except Exception as e:
-        logger.error(f"Error in get_Timestamp : [{e}]")
+        logger.error(f"Error in get_Timestamp {e}", exc_info=True)
         return ""
 
 
@@ -239,32 +242,24 @@ async def trace_message(
         chat: Union[ElementHandle, Locator],
         message: Union[ElementHandle, Locator]) -> Optional[bool]:
     """Tracks a unique message and stores its details if not already seen.
-    :return true if success in tracing message else false and None on error.
+    return true if success in tracing message else false and None on error.
     """
     try:
-        data_id = await sc.get_dataID(message)
-        if not data_id:
-            logger.error("data id is empty in trace_message")
-            return None
-
-        if data_id not in seen_messages:
-            seen_messages[data_id] = {
-                "chat": await sc.getChatName(chat),
-                "community": await sc.is_community(chat),
-                # "preview_url": await sc.getChat_low_Quality_Img(chat),
-                "jid": await getJID_mess(message),
-                "message": await sc.get_message_text(message),
-                "sender": await getSenderID(message),
-                "time": await get_Timestamp(message),
-                "systime": time.time(),
-                "direction": await getDirection(message),
-                "type": await GetMessType(message),
-            }
-            return True
-        return False
+        seen_messages[data_id] = {
+            "chat": await sc.getChatName(chat),
+            "community": await sc.is_community(chat),
+            "jid": await getJID_mess(message),
+            "message": await sc.get_message_text(message),
+            "sender": await getSenderID(message),
+            "time": await get_Timestamp(message),
+            "systime": time.time(),
+            "direction": await getDirection(message),
+            "type": await GetMessType(message),
+        }
+        return True
     except Exception as e:
-        logger.error(f"Error in trace_message : {e}")
-        return None
+        logger.error(f"Error in trace_message {e}", exc_info=True)
+    return False
 
 
 def cleanFolder(folder: pa.Path) -> None:
@@ -277,4 +272,4 @@ def cleanFolder(folder: pa.Path) -> None:
                 elif item.is_dir():
                     shutil.rmtree(item)
             except Exception as e:
-                print(f"⚠️ Could not delete {item}: {e}")
+                logger.error(f"Error in cleanFolder {e}", exc_info=True)

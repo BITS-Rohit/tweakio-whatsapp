@@ -64,12 +64,20 @@ def chat_list_filters_groups(page: Page) -> Locator:
 
 async def total_chats(page: Page) -> int:
     """Returns the total number of chats visible in the chat list."""
-    return int(chat_list(page).get_attribute("aria-rowcount")) or 0
+    element = chat_list(page)  # await if chat_list is async
+    attr = await element.get_attribute("aria-rowcount")
+    return int(attr) if attr else 0
 
 
-def chat_items(page: Page) -> Locator:
+def chat_items(page: Page) -> Optional[Locator]:
     """Returns a locator for all individual chat items (buttons) in the list."""
-    return chat_list(page).get_by_role("listitem")
+    row_locator = chat_list(page).get_by_role("row")
+    list_locator = chat_list(page).get_by_role("listitem")
+    if row_locator:
+        return row_locator
+    elif list_locator:
+        return list_locator
+    return None
 
 
 async def getChat_low_Quality_Img(chat: Union[ElementHandle, Locator]) -> str:
@@ -121,7 +129,6 @@ async def is_community(chat: Union[ElementHandle, Locator]) -> bool:
     if icon and await icon.is_visible():
         return True
     return False
-
 
 
 def Profile_header(page: Page) -> Locator:
@@ -213,6 +220,7 @@ async def get_dataID(message: Union[ElementHandle, Locator]) -> str:
     """Returns the unique data-id attribute of a message."""
     return await message.get_attribute("data-id") or ""
 
+
 # -------------------- Media Send  -------------------- #
 def plus_rounded_icon(page: Page) -> Locator:
     """
@@ -296,6 +304,11 @@ async def pic_handle(message: ElementHandle) -> bool:
 
 
 async def isVideo(message: ElementHandle) -> bool:
+    """
+    Checks if current message is of type : video
+    :param message: ElementHandle
+    :return: bool
+    """
     video = await message.query_selector(
         "xpath=.//span[@data-icon='media-play' or @data-icon='msg-video']"
     )
@@ -351,20 +364,19 @@ async def is_lottie_animation_sticker(message: ElementHandle) -> bool:
 async def isSticker(message: ElementHandle) -> bool:
     """Returns True if any sticker type is detected using XPath."""
     return (
-        await is_animated_sticker(message)
-        or await is_plain_sticker(message)
-        or await is_lottie_animation_sticker(message)
+            await is_animated_sticker(message)
+            or await is_plain_sticker(message)
+            or await is_lottie_animation_sticker(message)
     )
 
 
 # -------------------- Quoted Message Utilities -------------------- #
 
-def isQuotedText(message: ElementHandle) -> ElementHandle:
+async def isQuotedText(message: ElementHandle) -> Optional[ElementHandle]:
     """
-    Checks if a message is quoting another and returns the quoted‑message button handle.
-    Matches any div with a data-pre-plain-text attribute, then its button labeled "Quoted message".
+    Checks if a message is quoting another and returns the quoted-message handle.
     """
-    return message.query_selector("span.quoted-mention")
+    return await message.query_selector("span.quoted-mention")
 
 
 def get_QuotedText_handle(message: ElementHandle) -> str:
@@ -405,6 +417,7 @@ Options :
 --clear chat 
 --Exit group
 """
+
 
 async def group_info(page: Page) -> Optional[ElementHandle]:
     dialog = await page.query_selector("div[role='dialog']")

@@ -1,26 +1,42 @@
-from pathlib import Path
 import os
+from pathlib import Path
+import shutil
 from platformdirs import PlatformDirs
 
 dirs = PlatformDirs(appname="TweakioWhatsApp", appauthor="Rohit")
 
-# 🏠 This is your app's root directory (auto OS-specific)
+# 🏠 App root directory (OS-specific)
 rootDir = Path(dirs.user_data_dir)
 
-# Create your app subdirectories
+# App subdirectories and files
 browser_manager_dir = rootDir / "BrowserManager"
+storage_state_file = browser_manager_dir / "StorageState.json"
 fingerprint_file = browser_manager_dir / "fingerprint.pkl"
+fingerprint_debug_json = browser_manager_dir / "fingerprint.json"
 user_dir = rootDir / "user"
 cache_dir = Path(dirs.user_cache_dir)
 log_dir = Path(dirs.user_log_dir)
+MessageTrace_file = cache_dir / "MessageTrace.txt"
+ErrorTrace_file = cache_dir / "ErrorTrace.log"
 
 # Ensure folders exist
-for d in [browser_manager_dir, user_dir, cache_dir, log_dir]:
-    os.makedirs(d, exist_ok=True)
+def makedir( from_: str ,override : bool = True ):
+    """Directory Reset"""
+    if override: print("====== Overriding =======")
+    print(f"---directories creation--- {from_}")
+    for d in [browser_manager_dir, user_dir, cache_dir, log_dir]:
+        if override: shutil.rmtree(d) if d.exists() else None
+        os.makedirs(d, exist_ok=True)
+makedir(override=False, from_="From Directory itself")
 
 
-print(f"Root Dir: {rootDir}")
-print(f"Browser Manager Dir: {browser_manager_dir}")
-print(f"User Dir: {user_dir}")
-print(f"Cache Dir: {cache_dir}")
-print(f"Log Dir: {log_dir}")
+async def get_all_paths() -> dict:
+    """
+    Returns a dictionary of all directory and file paths in the app.
+    Keys are variable names, values are Path objects.
+    """
+    current_globals = globals()
+    paths_dict = {name: val for name, val in current_globals.items() if isinstance(val, Path)}
+    return paths_dict
+
+

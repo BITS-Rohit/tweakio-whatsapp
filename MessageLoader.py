@@ -1,9 +1,13 @@
+"""
+Message Class for whatsapp chats
+"""
 import asyncio
-from typing import Optional, Dict
+from typing import Optional
 
-from playwright.async_api import Page, Locator
+from playwright.async_api import Page, Locator, ElementHandle
 
 import Extra as ex
+import directory as dirs
 import selector_config as sc
 from Errors import MessageNotFound
 from Shared_Resources import logger
@@ -50,26 +54,14 @@ class MessageLoader:
     ----- Some Extra Functions :
     """
 
-    def __init__(self, trace_path: str, page: Page, trace: bool = True):
-        self.outgoing = None
-        self.incoming = None
-        self.default = None
-        self.trace = trace
-        self.page = page
+    def __init__(self, page: Page, trace_path: str = str(dirs.MessageTrace_file)) -> None:
+        self.outgoing: bool
+        self.incoming: bool
+        self.default: bool
+        self.page: Page = page
         self.trace_path = trace_path
-        self.msg_id_map: Dict[str, Locator] = {}
-        self.ID = 1
-        self.SeenIDS = set()
+        self.SeenIDS: dict = {}  # Temporary Based Running
 
-    async def _GetMID(self) -> str:
-        """
-        This is temporary IDs managing for the current session handling.
-        They will be wiped after the current process/instance of session ends.
-        Internally used for other functions Managing like : reply
-        """
-        mid = f"M{self.ID}"
-        self.ID += 1
-        return mid
 
     async def _GetScopedMessages(self, incoming: bool, outgoing: bool) -> Locator:
         self.incoming = incoming
@@ -90,7 +82,7 @@ class MessageLoader:
 
     async def LiveMessages(
             self,
-            chat_id: str,
+            chat_id: Optional[Locator, ElementHandle],
             cycle: int = 5,
             incoming: bool = True,
             outgoing: bool = True,
@@ -111,24 +103,24 @@ class MessageLoader:
                 raise MessageNotFound()
 
             for i in range(count):
-                msg = messages.nth(i)
-                if self.trace:
-                    await ex.trace_message(seen_messages=self.SeenIDS, message=msg, chat=chat_id)
+                msg = messages.nth(i)  # Msg Element
 
-                txt = await sc.get_message_text(msg)
-                m_id = await self._GetMID()
+                txt = await sc.get_message_text(msg)  # Text Message of the Msg
 
                 data_id = sc.get_dataID(msg)
                 if not data_id:
                     raise Exception("Data ID null in the Live Messages")
 
                 if data_id not in self.SeenIDS:
-                    self.msg_id_map[m_id] = msg
-                    self.SeenIDS.add(data_id)
-                    yield m_id, txt
+                    tracing : bool = await ex.trace_message(
+                        seen_messages=self.SeenIDS,
+                        message=msg,
+                        chat=chat_id)  # Tracing Automatically
+                    if tracing:
 
-            if cycle == 0:  # ✅ base case → single fetch
-                return
+                        yield msg, txt
+
+            if cycle == 0: return
 
             await asyncio.sleep(pollingTime)
             async for m in self.LiveMessages(chat_id, cycle - 1, incoming, outgoing, pollingTime):
@@ -136,4 +128,4 @@ class MessageLoader:
 
 
         except Exception as e:
-            logger.error(f"{e} -- Error in LiveMessages")
+            logger.error(f" -- Error in LiveMessages -- {e}", exc_info=True)

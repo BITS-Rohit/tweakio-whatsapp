@@ -45,11 +45,11 @@ async def human_send(page: Page, element: ElementHandle, text: str):
                     await page.keyboard.press("Shift+Enter")
 
     except Exception as e:
-        logger.warning(f"[human_send fallback] Typing failed: {e}")
+        logger.warning(f"[human_send fallback] Typing failed: {e}",exc_info=True)
         try:
             await element.fill(text)
             await page.keyboard.press("Enter")
-        except Exception as e2:
-            logger.error(f"[human_send fallback] Fill and Enter also failed: {e2}")
+        except Exception as e:
+            logger.error(f"[human_send fallback] Fill and Enter also failed: {e}",exc_info=True)
             await page.keyboard.press("Escape", delay=0.5)
             await page.keyboard.press("Escape", delay=0.5)

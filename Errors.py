@@ -32,6 +32,7 @@ class MessageTypeError(Exception):
     def __init__(self, message="Message type not found."):
         super().__init__(message)
 
+
 class MessageNotFound(Exception):
     def __init__(self, message="Message not found."):
         super().__init__(message)

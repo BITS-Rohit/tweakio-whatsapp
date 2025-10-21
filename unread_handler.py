@@ -1,7 +1,15 @@
-import asyncio, random
+"""
+Unread Handler Doc
+"""
+import asyncio
+import random
 from typing import Union
+
 from playwright.async_api import Page, ElementHandle, Locator
+
 import selector_config as sc
+from Shared_Resources import logger
+
 
 # --- ---- Unread Handle ---- ---
 async def is_unread(chat: Union[ElementHandle, Locator]) -> int:
@@ -21,7 +29,7 @@ async def is_unread(chat: Union[ElementHandle, Locator]) -> int:
                 return 1 if text.isdigit() else 0
         return 0
     except Exception as e:
-        print(f"[is_unread] Error: {e}")
+        logger.error(f"[is_unread] Error {e}", exc_info=True)
         return 0
 
 
@@ -48,20 +56,18 @@ async def do_unread(page: Page, chat: Union[ElementHandle, Locator]) -> None:
         else:
             raise Exception("'Mark as unread' option not found or not visible")
 
-    except Exception as e:
+    except Exception:
         try:
             read_option = await (await page.query_selector("role=application")).query_selector(
                 "li span:text-matches('mark as read', 'i')"
             )
             if read_option:
-                print(f"Chat is already unread — [{await sc.getChatName(chat)}]")
+                logger.info(f"Chat is already unread — [{await sc.getChatName(chat)}]")
             else:
                 raise
-        except:
-            print(f"[do_unread] Error marking unread: {e}")
+        except Exception as e:
+            logger.error(f"[do_unread] Error marking unread {e}", exc_info=True)
 
         # Reset state by clicking outside (WA icon)
         wa_icon = sc.wa_icon(page)
         await wa_icon.click()
-
-
