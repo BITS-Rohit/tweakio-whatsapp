@@ -117,7 +117,6 @@ class MessageLoader:
                         message=msg,
                         chat=chat_id)  # Tracing Automatically
                     if tracing:
-
                         yield msg, txt
 
             if cycle == 0: return

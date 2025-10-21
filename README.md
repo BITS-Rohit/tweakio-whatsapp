@@ -20,13 +20,19 @@ We are also working on a **research paper** that studies WhatsApp security and a
 ## Example Usage
 
 ```python
-from whatsapp_bot import Whatsapp
+import login
+import BrowserManager as bm
 
-# Login via code
-session = Whatsapp.login(number="+911234567890", country="IN")
+# Create Browser Manager instance
+b = bm.BrowserManager(override_cookies=True) # You can override for new setup or just don't pass anything.
+page = await b.getPage() # Get Page directly from it.
 
-# Logout
-session.logout()
+# Login to your account
+wp_login = login.WhatsappLogin(page=page, number="63980 xxxxx", country="india",override_login=True) #Same you can override or not
+await wp_login.login()
+
+# This is minimal Setup only for login to your account. You can build your own pipeline using the modular components provided in the library.
+# Also, you can use Chat Loader and Message Loader to send messages to multiple contacts.
 ```
 
 > This example demonstrates a simple automation pipeline. More advanced integrations can be built using the modular components of the library.
