@@ -126,7 +126,7 @@ class ChatLoader:
         If already unread, logs info instead of failing.
         """
         try:
-            page = self.page
+            page : Page = self.page
 
             if isinstance(chat, Locator):
                 chat = await chat.element_handle(timeout=1000)
@@ -160,7 +160,7 @@ class ChatLoader:
             logger.error(f"[do_unread] Error marking unread: {e}", exc_info=True)
             # Reset by clicking WA icon if available
             try:
-                wa_icon = sc.wa_icon(page)
+                wa_icon = sc.wa_icon(page= self.page)
                 if await wa_icon.count() > 0:
                     await wa_icon.first.click()
             except Exception as e:

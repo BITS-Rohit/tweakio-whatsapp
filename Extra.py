@@ -6,6 +6,7 @@ import asyncio
 import pathlib as pa
 import random
 import shutil
+import time
 from typing import Union, Optional
 
 from playwright.async_api import Page, ElementHandle, Locator
@@ -202,9 +203,10 @@ async def GetMessType(message: Union[ElementHandle, Locator]) -> str:
         if await sc.is_Voice_Message(message):
             return "Voice Message"
 
-        q = sc.isQuotedText(message)
+        q =await sc.isQuotedText(message)
         if q and await q.is_visible():
             return "quoted"
+
         return "text"
 
     except Exception as e:
@@ -237,10 +239,52 @@ async def get_Timestamp(message: Union[ElementHandle, Locator]) -> str:
 # ----------------------
 # Trace message
 # ----------------------
+
+class TracerOBJ:
+    """
+    Wrapper class for message trace dictionaries.
+    Allows dot-access to all fields (e.g. obj.direction).
+    All fields are stored as strings. Missing keys default to 'None'.
+    """
+
+    def __init__(self, data: dict = None):
+        data = data or {}
+        def str_or_none(val):
+            """Wrapper for value if exists else  Empty value  """
+            return str(val) if val is not None else ""
+
+        # Explicit fields with string conversion
+        self.chat: str = str_or_none(data.get("chat"))
+        self.community: str = str_or_none(data.get("community"))
+        self.jid: str = str_or_none(data.get("jid"))
+        self.message: str = str_or_none(data.get("message"))
+        self.sender: str = str_or_none(data.get("sender"))
+        self.time: str = str_or_none(data.get("time"))
+        self.systime: str = str_or_none(data.get("systime", time.time()))
+        self.direction: str = str_or_none(data.get("direction"))
+        self.type: str = str_or_none(data.get("type"))
+
+        # Any extra fields not listed above, converted to str
+        self.extra = {k: str(v) for k, v in data.items()
+                      if k not in {"chat", "community", "jid", "message", "sender", "time", "systime", "direction", "type"}}
+
+    def __repr__(self):
+        attrs = ", ".join(f"{k}={v!r}" for k, v in self.__dict__.items())
+        return f"<TracerOBJ {attrs}>"
+
+    def to_dict(self) -> dict:
+        """Convert back to dictionary with all values as strings."""
+        d = {k: v for k, v in self.__dict__.items() if k != "extra"}
+        d.update(self.extra)
+        return d
+
+
+
 async def trace_message(
         seen_messages: dict,
         chat: Union[ElementHandle, Locator],
-        message: Union[ElementHandle, Locator]) -> Optional[bool]:
+        message: Union[ElementHandle, Locator],
+        data_id : str) -> Optional[bool]:
     """Tracks a unique message and stores its details if not already seen.
     return true if success in tracing message else false and None on error.
     """
@@ -252,7 +296,7 @@ async def trace_message(
             "message": await sc.get_message_text(message),
             "sender": await getSenderID(message),
             "time": await get_Timestamp(message),
-            "systime": time.time(),
+            "systime": str(int(time.time())),
             "direction": await getDirection(message),
             "type": await GetMessType(message),
         }

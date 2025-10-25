@@ -168,7 +168,7 @@ def _side_Bar_Communities(page: Page) -> Locator:
 
 # -------------------- Messages Section -------------------- #
 
-def messages(page: Page) -> Locator:
+async def messages(page: Page) -> Locator:
     """
     Returns a locator for all messages in the current open chat.
     Each message element has a unique `data-id` and role "row".
@@ -176,12 +176,12 @@ def messages(page: Page) -> Locator:
     return page.locator('[role="row"] div[data-id]')
 
 
-def messages_incoming(page: Page) -> Locator:
+async def messages_incoming(page: Page) -> Locator:
     """Filter for the personal | group chat incoming messages"""
     return page.locator('[role="row"] div[data-id] .message-in')
 
 
-def messages_outgoing(page: Page) -> Locator:
+async def messages_outgoing(page: Page) -> Locator:
     """Filter for the personal | group chat outgoing messages"""
     return page.locator('[role="row"] div[data-id] .message-out')
 
@@ -216,9 +216,10 @@ async def is_message_out(message: Union[ElementHandle, Locator]) -> bool:
     return element is not None and await element.is_visible()
 
 
-async def get_dataID(message: Union[ElementHandle, Locator]) -> str:
+async def   get_dataID(message: Union[ElementHandle, Locator]) -> str:
     """Returns the unique data-id attribute of a message."""
-    return await message.get_attribute("data-id") or ""
+    ID = await message.get_attribute("data-id")
+    return ID or ""
 
 
 # -------------------- Media Send  -------------------- #
@@ -376,7 +377,9 @@ async def isQuotedText(message: ElementHandle) -> Optional[ElementHandle]:
     """
     Checks if a message is quoting another and returns the quoted-message handle.
     """
-    return await message.query_selector("span.quoted-mention")
+    quoted = await message.query_selector("span.quoted-mention")
+    return quoted
+
 
 
 def get_QuotedText_handle(message: ElementHandle) -> str:

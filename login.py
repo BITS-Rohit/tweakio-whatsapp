@@ -5,6 +5,7 @@ import asyncio
 import os
 import random
 import re
+import shutil
 from typing import Optional
 
 from playwright.async_api import Locator
@@ -63,8 +64,11 @@ class WhatsappLogin:
         if self.override_login:
             logger.info("Overriding login to Whatsapp Web")
             if self.storage_file_path.exists():
-                shutil.rmtree(self.storage_file_path)
-                os.makedirs(self.storage_file_path)
+                if self.storage_file_path.is_dir():
+                    shutil.rmtree(self.storage_file_path)
+                else:
+                    os.remove(self.storage_file_path)
+            os.makedirs(self.storage_file_path.parent, exist_ok=True)
 
         if self.page is None: raise PageNotFound()
         if self.login_prefer == "1":

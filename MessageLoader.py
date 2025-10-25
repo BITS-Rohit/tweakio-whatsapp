@@ -2,7 +2,7 @@
 Message Class for whatsapp chats
 """
 import asyncio
-from typing import Optional
+from typing import Union
 
 from playwright.async_api import Page, Locator, ElementHandle
 
@@ -10,6 +10,7 @@ import Extra as ex
 import directory as dirs
 import selector_config as sc
 from Errors import MessageNotFound
+from Extra import TracerOBJ
 from Shared_Resources import logger
 
 
@@ -60,8 +61,7 @@ class MessageLoader:
         self.default: bool
         self.page: Page = page
         self.trace_path = trace_path
-        self.SeenIDS: dict = {}  # Temporary Based Running
-
+        self.TracerDICT: dict = {}  # Temporary Based Running
 
     async def _GetScopedMessages(self, incoming: bool, outgoing: bool) -> Locator:
         self.incoming = incoming
@@ -70,19 +70,16 @@ class MessageLoader:
         self.default = self.incoming & self.outgoing  # Both true == default
 
         if self.default:
-            messages = sc.messages(self.page)
+            messages: Locator = await sc.messages(self.page)
         elif self.incoming:
-            messages = sc.messages_incoming(page=self.page)
+            messages: Locator = await sc.messages_incoming(page=self.page)
         else:
-            messages = sc.messages_outgoing(page=self.page)
+            messages: Locator = await sc.messages_outgoing(page=self.page)
         return messages
-
-    async def _GetMessElement(self, m_id: str) -> Optional[Locator]:
-        return self.msg_id_map.get(m_id)
 
     async def LiveMessages(
             self,
-            chat_id: Optional[Locator, ElementHandle],
+            chat_id: Union[Locator, ElementHandle],
             cycle: int = 5,
             incoming: bool = True,
             outgoing: bool = True,
@@ -96,28 +93,30 @@ class MessageLoader:
         """
 
         try:
-            messages = await self._GetScopedMessages(incoming, outgoing)
-            count = await messages.count()
+            await chat_id.click(timeout=3000)
+            messages: Locator = await self._GetScopedMessages(incoming, outgoing)
+            count: int = await messages.count()
 
             if count == 0:
                 raise MessageNotFound()
 
             for i in range(count):
                 msg = messages.nth(i)  # Msg Element
+                txt : str = await sc.get_message_text(msg)  # Text Message of the Msg
 
-                txt = await sc.get_message_text(msg)  # Text Message of the Msg
-
-                data_id = sc.get_dataID(msg)
+                data_id: str = await sc.get_dataID(msg)
                 if not data_id:
                     raise Exception("Data ID null in the Live Messages")
 
-                if data_id not in self.SeenIDS:
-                    tracing : bool = await ex.trace_message(
-                        seen_messages=self.SeenIDS,
+                if data_id not in self.TracerDICT:
+                    tracing: bool = await ex.trace_message(
+                        seen_messages=self.TracerDICT,
                         message=msg,
-                        chat=chat_id)  # Tracing Automatically
-                    if tracing:
-                        yield msg, txt
+                        chat=chat_id,
+                        data_id=data_id)  # Tracing Automatically
+
+                    # Yielding 4 params msg locator , txt str , tracing bool , tracer dict if tracing else {}
+                    yield msg, txt, tracing, TracerOBJ(self.TracerDICT[data_id]) if tracing else TracerOBJ()
 
             if cycle == 0: return
 
