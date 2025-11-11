@@ -2,8 +2,6 @@
 
 This repository provides a developer-friendly toolkit for **WhatsApp automation**, with modular components for building pipelines and advanced automation workflows. This library is designed for developers who want to **automate WhatsApp tasks** efficiently and safely, while leveraging modern automation techniques.
 
-We are also working on a **research paper** that studies WhatsApp security and automation practices. The link to the paper will be added once published.
-
 ---
 
 ## Features
@@ -47,7 +45,6 @@ session.logout()
 
 * Adding more modules like **ChatRoller**, **MessageLoader**, and **BrowserIntegrate** with anti-detection techniques.
 * Expanding **priority selector functionality** for dynamic UI elements.
-* Publishing a **research paper** on WhatsApp automation and security.
 
 ---
 
